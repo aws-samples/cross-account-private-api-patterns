@@ -24,7 +24,7 @@ cd consumer && npm i && cdk bootstrap
 cdk deploy ConsumerVpcStack --parameters producerAccountId=12345678910
 ```
 
-Then bootstrap and deploy the producer CDK application. This is deployed into the producer AWS account. This will provision the API that will be consumed in the consumer account. Copy the ConsumerVPCe and ApiKeySecretArn outputs from the output of the first stack to pass into the producer stack (this is used to lock down the trust policy on the private API to just this endpoint) e.g. vpce-0e3ca9432b3e8cba6 & arn:aws:secretsmanager:eu-west-2:12345678910:secret:CrossAccountAPIKeyabc123-def456:
+Then bootstrap and deploy the producer CDK application. This is deployed into the producer AWS account. This will provision the API that will be consumed in the consumer account. Copy the ConsumerVPCe and ApiKeySecretArn outputs from the output of the first stack to pass into the producer stack (this is used to lock down the trust policy on the private API to just this endpoint) e.g. `vpce-0e3ca9432b3e8cba6` & `arn:aws:secretsmanager:eu-west-2:12345678910:secret:CrossAccountAPIKeyabc123-def456`:
 
 ```
 cd ../producer && npm i && cdk bootstrap
@@ -34,7 +34,7 @@ cd ../producer && npm i && cdk bootstrap
 cdk deploy --parameters ConsumerVPCe=vpce-0e3ca9432b3e8cba6 --parameters ApiKeySecretArn=arn:aws:secretsmanager:eu-west-2:12345678910:secret:CrossAccountAPIKeyabc123-def456
 ```
 
-Finally deploy the consumer API stack. This is deployed into the consumer AWS account. This will provision the API & Lambda functions that can be used to consume the private API in the producer account. Use the output API URL from the previous stack as a parameter in this final stack (e.g. https://abc123def.execute-api.eu-west-2.amazonaws.com/prod/widgets). Also provide the AWS Account ID of the producer account:
+Finally deploy the consumer API stack. This is deployed into the consumer AWS account. This will provision the API & Lambda functions that can be used to consume the private API in the producer account. Use the output API URL from the previous stack as a parameter in this final stack (e.g. `https://abc123def.execute-api.eu-west-2.amazonaws.com/prod/widgets`). Also provide the AWS Account ID of the producer account:
 
 ```
 cd ../consumer
