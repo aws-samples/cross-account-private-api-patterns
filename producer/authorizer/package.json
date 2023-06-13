@@ -7,7 +7,7 @@
     "author": "SAM CLI",
     "license": "MIT",
     "dependencies": {
-        "@aws-sdk/client-secrets-manager": "^3.223.0"
+        "@aws-sdk/client-secrets-manager": "^3.350.0"
     },
     "scripts": {
         "unit": "jest",
