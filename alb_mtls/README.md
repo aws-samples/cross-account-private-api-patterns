@@ -8,10 +8,10 @@
 openssl req -new -newkey rsa:2048 -days 365 -keyout my_client.key -out my_client.csr
 ```
 ```
-aws acm-pca issue-certificate --certificate-authority-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id--csr fileb://my_client.csr --signing-algorithm "SHA256WITHRSA" --validity Value=365,Type="DAYS" --template-arn arn:aws:acm-pca:::template/EndEntityCertificate/V1
+aws acm-pca issue-certificate --certificate-authority-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id --csr fileb://my_client.csr --signing-algorithm "SHA256WITHRSA" --validity Value=365,Type="DAYS" --template-arn arn:aws:acm-pca:::template/EndEntityCertificate/V1
 ```
 ```
-aws acm-pca get-certificate -certificate-authority-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id--certificate-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id/certificate/certificate_id--output text
+aws acm-pca get-certificate -certificate-authority-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id --certificate-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id/certificate/certificate_id --output text
 ```
 
 (optional) - if you set a passphrase on the key:

@@ -29,4 +29,9 @@ NagSuppressions.addStackSuppressions(vpc, [
     reason:
       "AWS Managed Policies used in this solution are:  AWSLambdaBasicExecutionRole",
   },
+  {
+    id: "AwsSolutions-EC29",
+    reason:
+      "Standalone instace just for testing",
+  },
 ]);

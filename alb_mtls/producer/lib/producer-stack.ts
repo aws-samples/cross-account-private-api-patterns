@@ -34,6 +34,7 @@ import {
   SecurityGroup,
   Port,
   Peer,
+  CfnVPCEndpointService,
 } from "aws-cdk-lib/aws-ec2";
 import {
   NetworkLoadBalancer,
@@ -54,8 +55,10 @@ import {
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Key } from "aws-cdk-lib/aws-kms";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment"
-import { PrivateCertificate } from "aws-cdk-lib/aws-certificatemanager";
+import { Certificate, CertificateValidation, PrivateCertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { CertificateAuthority } from "aws-cdk-lib/aws-acmpca";
+import { ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
+import { LoadBalancerTarget } from "aws-cdk-lib/aws-route53-targets";
 
 export class ProducerStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -67,14 +70,19 @@ export class ProducerStack extends cdk.Stack {
       description: "The AWS Account ID of the producer account.",
     });
 
-    const domainName = new CfnParameter(this, "domainName", {
+    const subdomain = new CfnParameter(this, "subdomain", {
       type: "String",
-      description: "The domain name to create an SSL certificate for the application load balancer.",
+      description: "The domain name to create a default SSL certificate for the application load balancer e.g. mydomain.com",
     });
 
-    const privateCAID = new CfnParameter(this, "privateCAID", {
+    const domain  = new CfnParameter(this, "domainName", {
       type: "String",
-      description: "The private CA ID to use to issue the certificate.",
+      description: "The domain name to create a subdomain for the service e.g. mtls.mydomain.com",
+    });
+
+    const hostedZoneId = new CfnParameter(this, "hostedZoneId", {
+      type: "String",
+      description: "The hosted zone to create the subdomain.",
     });
 
     const vpc = new Vpc(this, "mTLSVPC", {
@@ -134,7 +142,17 @@ export class ProducerStack extends cdk.Stack {
     });
     nlb.logAccessLogs(nlbAccessLogs, "consumerAccessLogs");
 
-    const outputNlb = new cdk.CfnOutput(this, "ConsumerNLBArn", {
+    const cfnVPCEndpointService = new CfnVPCEndpointService(this, 'VPCEndpointService', {
+      acceptanceRequired: true,
+      networkLoadBalancerArns: [nlb.loadBalancerArn]
+    });
+
+    const outputEndpointService = new cdk.CfnOutput(this, "EndpointServiceID", {
+      value: cfnVPCEndpointService.getAtt("ServiceId").toString(),
+      exportName: "EndpointService",
+    });
+
+    const outputNlb = new cdk.CfnOutput(this, "ConsumerNLBArnOutput", {
       value: nlb.loadBalancerArn,
       exportName: "ConsumerNLBArn",
     });
@@ -259,10 +277,14 @@ export class ProducerStack extends cdk.Stack {
       serviceToken: tsCustomProvider.serviceToken,
     });
 
-    const cert = new PrivateCertificate(this, 'PrivateCertificate', {
-      domainName: domainName.valueAsString,
-      certificateAuthority: CertificateAuthority.fromCertificateAuthorityArn(this, 'CA',
-      `arn:aws:acm-pca:${process.env.CDK_DEFAULT_REGION}:${process.env.CDK_DEFAULT_ACCOUNT}:certificate-authority/` + privateCAID.valueAsString),
+    const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+      zoneName: domain.valueAsString,
+      hostedZoneId: hostedZoneId.valueAsString
+    });
+
+    const cert = new Certificate(this, 'Certificate', {
+      domainName: subdomain.valueAsString + "." + domain.valueAsString,
+      validation: CertificateValidation.fromDns(hostedZone),
     });
 
     const albListener = new CfnListener(this, 'ALBListener', {
