@@ -14,7 +14,7 @@
     "@types/jest": "^27.5.2",
     "@types/node": "10.17.27",
     "@types/prettier": "2.6.0",
-    "aws-cdk": "2.111.0",
+    "aws-cdk": "2.113.0",
     "jest": "^27.5.1",
     "ts-jest": "^27.1.4",
     "ts-node": "^10.9.1",
@@ -24,7 +24,7 @@
     "@aws-sdk/client-ec2": "^3.462.0",
     "@aws-sdk/client-elastic-load-balancing-v2": "^3.462.0",
     "@aws-sdk/client-secrets-manager": "^3.369.0",
-    "aws-cdk-lib": "2.111.0",
+    "aws-cdk-lib": "2.113.0",
     "cdk-nag": "^2.27.205",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"

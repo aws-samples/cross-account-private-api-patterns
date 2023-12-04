@@ -38,12 +38,12 @@ import {
 } from "aws-cdk-lib/aws-ec2";
 import {
   NetworkLoadBalancer,
-  NetworkTargetGroup,
   Protocol,
   TargetType,
   ApplicationLoadBalancer,
   CfnListener,
-  ApplicationTargetGroup
+  ApplicationTargetGroup,
+  CfnTrustStore
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { AlbTarget } from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets'
 import {
@@ -55,10 +55,8 @@ import {
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Key } from "aws-cdk-lib/aws-kms";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment"
-import { Certificate, CertificateValidation, PrivateCertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { CertificateAuthority } from "aws-cdk-lib/aws-acmpca";
-import { ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
-import { LoadBalancerTarget } from "aws-cdk-lib/aws-route53-targets";
+import { Certificate, CertificateValidation } from "aws-cdk-lib/aws-certificatemanager";
+import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 export class ProducerStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -221,61 +219,19 @@ export class ProducerStack extends cdk.Stack {
       objectOwnership: ObjectOwnership.OBJECT_WRITER,
     })
 
-    new BucketDeployment(this, "DeployCAFiles", {
+    const uploadCa = new BucketDeployment(this, "DeployCAFiles", {
       sources: [
         Source.asset("./ca")
       ],
       destinationBucket: caBucket,
     })
 
-    const trustStoreFn = new NodejsFunction(
-      this,
-      "TrustStoreFunction",
-      {
-        runtime: Runtime.NODEJS_18_X,
-        handler: "lambdaHandler",
-        entry: "./trustStore/app.ts",
-        role: trustStoreFnRole,
-        timeout: Duration.seconds(120),
-        environment: {
-          BUCKET_NAME: caBucket.bucketName,
-          BUCKET_KEY: "Certificate.pem",
-          NAME: "alb-trust-store"
-        },
-        //bundle to grab latest sdk rather than default runtime version
-        bundling: {
-          externalModules: [],
-        },
-      }
-    );
-    caBucket.grantRead(trustStoreFn)
-
-    const tsCustomResourceRole = new Role(this, "TrustStoreCustomResourceRole", {
-      assumedBy: new ServicePrincipal("lambda.amazonaws.com").withSessionTags(),
-    });
-    tsCustomResourceRole.addToPolicy(
-      new PolicyStatement({
-        resources: ["*"],
-        actions: [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-        ],
-      })
-    );
-
-    const tsCustomProvider = new custom.Provider(
-      this,
-      "TrustStoreCustomProvider",
-      {
-        onEventHandler: trustStoreFn,
-        role: tsCustomResourceRole,
-      }
-    );
-
-    const ts = new CustomResource(this, "TrustStoreCreate", {
-      serviceToken: tsCustomProvider.serviceToken,
-    });
+    const ts = new CfnTrustStore(this, 'TrustStore', {
+      caCertificatesBundleS3Bucket: caBucket.bucketName,
+      caCertificatesBundleS3Key:  "Certificate.pem",
+      name: "alb-trust-store",
+    })
+    ts.node.addDependency(uploadCa)
 
     const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
       zoneName: domain.valueAsString,
@@ -302,12 +258,11 @@ export class ProducerStack extends cdk.Stack {
           }]
         }
       }],
-      loadBalancerArn: alb.loadBalancerArn
-      //todo: uncomment once supported in cdk
-      // ,mutualAuthentication: {
-      //   mode: "verify",
-      //   trustStoreArn: ts.getAtt("PhysicalResourceId").toString()
-      // }
+      loadBalancerArn: alb.loadBalancerArn,
+      mutualAuthentication: {
+        mode: "verify",
+        trustStoreArn: ts.getAtt("TrustStoreArn").toString()
+      }
     })
 
     const ipTargetRegisterRole = new Role(this, "ipTargetRegisterRole", {
