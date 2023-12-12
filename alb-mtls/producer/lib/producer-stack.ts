@@ -5,8 +5,10 @@ import * as custom from "aws-cdk-lib/custom-resources";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
 import {
   AccessLogFormat,
+  BasePathMapping,
   CfnAccount,
   Deployment,
+  DomainName,
   EndpointType,
   LambdaRestApi,
   LogGroupLogDestination,
@@ -63,6 +65,7 @@ export class ProducerStack extends cdk.Stack {
     super(scope, id, props);
     const resource = "widgets";
 
+    // Required input parameters
     const consumerAccountId = new CfnParameter(this, "consumerAccountId", {
       type: "String",
       description: "The AWS Account ID of the producer account.",
@@ -83,6 +86,7 @@ export class ProducerStack extends cdk.Stack {
       description: "The hosted zone to create the subdomain.",
     });
 
+    // Basic networking setup
     const vpc = new Vpc(this, "mTLSVPC", {
       vpcName: "mTLSVPC",
     });
@@ -94,6 +98,7 @@ export class ProducerStack extends cdk.Stack {
       service: InterfaceVpcEndpointAwsService.APIGATEWAY,
     });
 
+    //API Key for basic auth
     const key = new Key(this, "APIKeyKMSKey", {
       enableKeyRotation: true,
     });
@@ -125,6 +130,7 @@ export class ProducerStack extends cdk.Stack {
       exportName: "ApiKeySecretArn",
     });
 
+    //PrivateLink configuration
     const nlbAccessLogs = new Bucket(this, "NLBAccessLogsBucket", {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
@@ -145,9 +151,71 @@ export class ProducerStack extends cdk.Stack {
       networkLoadBalancerArns: [nlb.loadBalancerArn]
     });
 
-    const outputEndpointService = new cdk.CfnOutput(this, "EndpointServiceID", {
-      value: cfnVPCEndpointService.getAtt("ServiceId").toString(),
-      exportName: "EndpointService",
+    const configurePrivateDNSRole = new Role(this, "configurePrivateDNSRole", {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com").withSessionTags(),
+    });
+    configurePrivateDNSRole.addToPolicy(
+      new PolicyStatement({
+        resources: ["*"],
+        actions: [
+          "ec2:DescribeVpcEndpoints",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:ModifyVpcEndpointServiceConfiguration",
+          "ec2:DescribeVpcEndpointServiceConfigurations",
+          "ec2:StartVpcEndpointServicePrivateDnsVerification",
+          "route53:ChangeResourceRecordSets",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ],
+      })
+    );
+
+    const configurePrivateDNSFn = new NodejsFunction(
+      this,
+      "configurePrivateDNSFunction",
+      {
+        runtime: Runtime.NODEJS_18_X,
+        handler: "lambdaHandler",
+        entry: "./configurePrivateDNS/app.ts",
+        role: configurePrivateDNSRole,
+        environment: {
+          SERVICE_ID: cfnVPCEndpointService.getAtt("ServiceId").toString(),
+          DNS_NAME: subdomain.valueAsString + "." + domain.valueAsString,
+        },
+      }
+    );
+
+    const configurePrivateDNSCRRole = new Role(this, "configurePrivateDNSCRRole", {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com").withSessionTags(),
+    });
+    configurePrivateDNSCRRole.addToPolicy(
+      new PolicyStatement({
+        resources: ["*"],
+        actions: [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ],
+      })
+    );
+
+    const configurePrivateDNSProvider = new custom.Provider(
+      this,
+      "configurePrivateDNSProvider",
+      {
+        onEventHandler: configurePrivateDNSFn,
+        role: configurePrivateDNSCRRole,
+      }
+    );
+
+    const dnsService = new CustomResource(this, "configurePrivateDNS", {
+      serviceToken: configurePrivateDNSProvider.serviceToken,
+    });
+
+    const outputEndpointService = new cdk.CfnOutput(this, "ServiceName", {
+      value: dnsService.getAtt("ServiceName").toString(),
+      exportName: "ServiceName",
     });
 
     const outputNlb = new cdk.CfnOutput(this, "ConsumerNLBArnOutput", {
@@ -159,6 +227,7 @@ export class ProducerStack extends cdk.Stack {
       port: 443,
     });
 
+    //mTLS configuration
     const albAccessLogs = new Bucket(this, "ALBAccessLogsBucket", {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
@@ -346,6 +415,7 @@ export class ProducerStack extends cdk.Stack {
       ],
     });
 
+    // Producer API configuration
     const apiHandler = new NodejsFunction(this, "ProducerApiFunction", {
       runtime: Runtime.NODEJS_18_X,
       handler: "lambdaHandler",
@@ -439,6 +509,16 @@ export class ProducerStack extends cdk.Stack {
     );
 
     const deployment = new Deployment(this, "Deployment", { api });
+
+    const domainName = new DomainName(this, 'APIDomainName', {
+      certificate: cert,
+      domainName: subdomain.valueAsString + "." + domain.valueAsString
+    });
+
+    domainName.addBasePathMapping(api, {
+        stage: api.deploymentStage,
+    })
+    domainName.node.addDependency(deployment)
 
     const outputAPI = new cdk.CfnOutput(this, "ApiUrl", {
       value: api.urlForPath(`/${resource}`),

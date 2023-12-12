@@ -24,6 +24,7 @@
     "@aws-sdk/client-ec2": "^3.462.0",
     "@aws-sdk/client-elastic-load-balancing-v2": "^3.462.0",
     "@aws-sdk/client-secrets-manager": "^3.369.0",
+    "@aws-sdk/client-route-53": "^3.369.0",
     "aws-cdk-lib": "2.113.0",
     "cdk-nag": "^2.27.205",
     "constructs": "^10.0.0",
