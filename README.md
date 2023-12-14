@@ -4,7 +4,7 @@ This repository contains example patterns for consuming Private API Gateways acr
 
 ![Architecture Diagram](./architecture.png)
 
-## Getting Started
+## Getting Started :checkered_flag:
 
 The examples are provisioned using the Cloud Development Kit (CDK). To install the CDK locally, follow the instructions in the [CDK documentation](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install):
 
@@ -12,7 +12,13 @@ The examples are provisioned using the Cloud Development Kit (CDK). To install t
 npm install -g aws-cdk
 ```
 
-## Cross account via shared VPC endpoint
+There are 2 example implementations in this repository. The first uses a VPC endpoint to grant access to the consumer AWS account. The second uses mTLS and PrivateLink to authorize access, for example in a SaaS environment to grant secure access to tenants.
+
+1. **[VPC Endpoint](#vpce)**
+
+2. **[mTLS via PrivateLink](#mtls)**
+
+## Cross account via shared VPC endpoint :electric_plug: {#vpce}
 
 This example uses a VPC endpoint to securely consume a private API from one account via a serverless application in another account. 
 
@@ -52,7 +58,7 @@ cd ../consumer
 cdk deploy ConsumerApiStack --parameters targetApiUrl=https://<YOUR API ID>.execute-api.<YOUR REGION>.amazonaws.com/prod/widgets --parameters producerAccountId=12345678910
 ```
 
-Now the API can be tested using the following curl command. Note the Authorization header. The secret value used for this header can be retrieved from the Secrets Manager Secret "CrossAccountAPIKey" that was created in the consumer account as part of the CDK deployment. This implementation is used for simplicity for development and testing purposes. For production use, you should look at using a more secure authorization method such as AWS IAM or JWT authorization.
+Now the API can be tested using the following curl command. Note the Authorization header. The secret value used for this header can be retrieved from the Secrets Manager Secret `CrossAccountAPIKey` that was created in the consumer account as part of the CDK deployment. This implementation is used for simplicity for development and testing purposes. For production use, you should look at using a more secure authorization method such as AWS IAM or JWT authorization.
 
 ```
 curl https://<YOUR API ID>.execute-api.<YOUR REGION>.amazonaws.com/prod -H "Authorization: <YOUR SECRET API KEY>"
@@ -60,7 +66,7 @@ curl https://<YOUR API ID>.execute-api.<YOUR REGION>.amazonaws.com/prod -H "Auth
 
 You can test the Lambda implementation directly by navigating to the Lambda console and using the "Test" button with the default payload.
 
-## Cross account using mTLS
+## Cross account using mTLS :closed_lock_with_key: {#mtls} 
 
 This example uses mTLS to authenticate communication between a producer and subscriber AWS account. The producer is a private API gateway, fronted by an application load balancer for mTLS resolution. The consumer in this case is just an EC2 instance deployed into another AWS account. 
 
@@ -72,7 +78,7 @@ This example uses an AWS Private Certificate Authority, but you could follow the
 
 1. Create ACM Private CA, specifying the CN (Common Name) as the domain (e.g. mtls.mydomain.com)
 2. Download the generated Certificate.pem and copy it to the `ca` folder in the repository
-3. Generate client certificates against PCA as per: https://aws.amazon.com/blogs/security/use-acm-private-ca-for-amazon-api-gateway-mutual-tls/ e.g.: 
+3. Generate client certificates against PCA as per: https://aws.amazon.com/blogs/security/use-acm-private-ca-for-amazon-api-gateway-mutual-tls/ e.g: 
 
 ```
 openssl req -new -newkey rsa:2048 -days 365 -keyout my_client.key -out my_client.csr
@@ -84,7 +90,7 @@ aws acm-pca issue-certificate --certificate-authority-arn arn:aws:acm-pca:us-eas
 aws acm-pca get-certificate --certificate-authority-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id --certificate-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id/certificate/certificate_id --output text > my_client.pem
 ```
 
-Note, you may have to separate the certificates onto separate lines in the resulting my_client.pem file e.g.:
+:pencil2: Note, you may have to separate the certificates onto separate lines in the resulting `my_client.pem` file e.g.:
 
 ```
 ...Lw==
@@ -93,7 +99,7 @@ Note, you may have to separate the certificates onto separate lines in the resul
 MIIDKA...
 ```
 
-(optional) - if you set a passphrase on the key you can export it so you don't need to input a passphrase for every request:
+(_optional_) - if you set a passphrase on the key you can export it so you don't need to input a passphrase for every request:
 
 ```
 openssl rsa -in my_client.key -out client.key
@@ -123,8 +129,16 @@ cdk deploy --parameters endpointService=com.amazonaws.vpce.region.vpce-svc-12345
 
 Once this stack is deployed, the request to connection with the VPC endpoint must be accepted in the producer AWS account. This is an optional security control to manually verify consumers. 
 
-Then the API can be tested from the EC2 instance in the consumer account. Connect to the instance using Systems Manager Session Manager. You can retrieve the authentication token from AWS Secrets Manager on the producer. The secret ARN is also output from the producer stack for convenience:
+Then the API can be tested from the EC2 instance in the consumer account. Connect to the instance using Systems Manager Session Manager. You can retrieve the auth token from AWS Secrets Manager on the producer. The secret ARN is also output from the producer stack for convenience:
 
 ```
 curl -h "Authorization: Basic WjuAbc232QICxhjGNhPC12345" --key my_client.key --cert my_client.pem https:/mtls.mydomain.com/widgets 
+```
+
+## Cleanup :moneybag:
+
+Don't forget to spin down all the resources when you are done testing to save costs
+
+```
+cdk destroy
 ```
