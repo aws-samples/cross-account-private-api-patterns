@@ -42,8 +42,7 @@ export class ConsumerStack extends cdk.Stack {
     new InterfaceVpcEndpoint(this, 'VPCEndpoint', {
       vpc,
       service: new InterfaceVpcEndpointService(endpointService.valueAsString, 443),
-      // Choose which availability zones to place the VPC endpoint in, based on
-      // available AZs
+      privateDnsEnabled: true,
       subnets: {
         availabilityZones: vpc.availabilityZones
       }

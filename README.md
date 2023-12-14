@@ -81,10 +81,19 @@ openssl req -new -newkey rsa:2048 -days 365 -keyout my_client.key -out my_client
 aws acm-pca issue-certificate --certificate-authority-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id --csr fileb://my_client.csr --signing-algorithm "SHA256WITHRSA" --validity Value=365,Type="DAYS" --template-arn arn:aws:acm-pca:::template/EndEntityCertificate/V1
 ```
 ```
-aws acm-pca get-certificate -certificate-authority-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id --certificate-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id/certificate/certificate_id --output text
+aws acm-pca get-certificate --certificate-authority-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id --certificate-arn arn:aws:acm-pca:us-east-1:account_id:certificate-authority/certificate_authority_id/certificate/certificate_id --output text > my_client.pem
 ```
 
-(optional) - if you set a passphrase on the key:
+Note, you may have to separate the certificates onto separate lines in the resulting my_client.pem file e.g.:
+
+```
+...Lw==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIDKA...
+```
+
+(optional) - if you set a passphrase on the key you can export it so you don't need to input a passphrase for every request:
 
 ```
 openssl rsa -in my_client.key -out client.key
@@ -109,11 +118,13 @@ cd ../consumer && npm i && cdk bootstrap
 ```
 
 ```
-cdk deploy --parameters endpointService=abc123 
+cdk deploy --parameters endpointService=com.amazonaws.vpce.region.vpce-svc-123456abcde
 ```
 
-Then the API can be tested from the EC2 instance in the consumer account. Connect to the instance using Systems Manager Session Manager:
+Once this stack is deployed, the request to connection with the VPC endpoint must be accepted in the producer AWS account. This is an optional security control to manually verify consumers. 
+
+Then the API can be tested from the EC2 instance in the consumer account. Connect to the instance using Systems Manager Session Manager. You can retrieve the authentication token from AWS Secrets Manager on the producer. The secret ARN is also output from the producer stack for convenience:
 
 ```
-curl --key my_client.key --cert my_client.pem https:/mtls.mydomain.com/get
+curl -h "Authorization: Basic WjuAbc232QICxhjGNhPC12345" --key my_client.key --cert my_client.pem https:/mtls.mydomain.com/widgets 
 ```

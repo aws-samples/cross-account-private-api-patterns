@@ -36,6 +36,7 @@ import {
   Port,
   Peer,
   CfnVPCEndpointService,
+  CfnVPCEndpointServicePermissions,
 } from "aws-cdk-lib/aws-ec2";
 import {
   NetworkLoadBalancer,
@@ -148,6 +149,11 @@ export class ProducerStack extends cdk.Stack {
     const cfnVPCEndpointService = new CfnVPCEndpointService(this, 'VPCEndpointService', {
       acceptanceRequired: true,
       networkLoadBalancerArns: [nlb.loadBalancerArn]
+    });
+
+    const cfnVPCEndpointServicePermissions = new CfnVPCEndpointServicePermissions(this, 'VPCEndpointServicePermissions', {
+      serviceId: cfnVPCEndpointService.getAtt("ServiceId").toString(),
+      allowedPrincipals: ['arn:aws:iam::' + consumerAccountId.valueAsString + ':root'],
     });
 
     const configurePrivateDNSRole = new Role(this, "configurePrivateDNSRole", {
