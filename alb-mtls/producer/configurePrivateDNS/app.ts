@@ -17,7 +17,7 @@ const route53 = new Route53Client({});
 export const lambdaHandler = async (event: any, context: any) => {
     console.log('REQUEST RECEIVED:\n' + JSON.stringify(event));
     if (event.RequestType == 'Delete') {
-        await sendResponse(event, context, 'SUCCESS', '');
+        await sendResponse(event, context, 'SUCCESS');
         return;
     }
     try {
@@ -34,15 +34,13 @@ export const lambdaHandler = async (event: any, context: any) => {
 
         let dnsValue = ""
         let dnsName = ""
-        let serviceName = ""
 
         while (true) {
             const describeCommand = new DescribeVpcEndpointServiceConfigurationsCommand(describeParams);
             const result = await ec2.send(describeCommand);
             if (result.ServiceConfigurations![0].ServiceState == 'Available') {
                 dnsValue = result.ServiceConfigurations![0].PrivateDnsNameConfiguration?.Value!;
-                dnsName = result.ServiceConfigurations![0].PrivateDnsNameConfiguration?.Name!;
-                serviceName = result.ServiceConfigurations![0].ServiceName!;                
+                dnsName = result.ServiceConfigurations![0].PrivateDnsNameConfiguration?.Name!;             
                 break;
             }
             await new Promise(resolve => setTimeout(resolve, 5000));
@@ -55,12 +53,12 @@ export const lambdaHandler = async (event: any, context: any) => {
                     {
                         Action: ChangeAction.CREATE,
                         ResourceRecordSet: {
-                            Name: dnsName,
+                            Name: dnsName + "." + process.env.ROOT_DNS,
                             Type: RRType.TXT,
                             TTL: 300,
                             ResourceRecords: [
                                 {
-                                    Value: dnsValue
+                                    Value: "\"" + dnsValue + "\""
                                 }
                             ]
                         }
@@ -88,22 +86,21 @@ export const lambdaHandler = async (event: any, context: any) => {
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
 
-        await sendResponse(event, context, 'SUCCESS', serviceName);
+        await sendResponse(event, context, 'SUCCESS');
     } catch (e) {
         console.log(e);
-        await sendResponse(event, context, 'FAILED', '');
+        await sendResponse(event, context, 'FAILED');
     }
 };
 
-const sendResponse = async (event: any, context: any, responseStatus: string, serviceName: string) => {
+const sendResponse = async (event: any, context: any, responseStatus: string) => {
     const responseBody = JSON.stringify({
         Status: responseStatus,
         Reason: 'See the details in CloudWatch Log Stream: ' + context.logStreamName,
         PhysicalResourceId: context.logStreamName,
         StackId: event.StackId,
         RequestId: event.RequestId,
-        LogicalResourceId: event.LogicalResourceId,
-        ServiceName: serviceName
+        LogicalResourceId: event.LogicalResourceId
     });
 
     console.log('RESPONSE BODY:\n', responseBody);

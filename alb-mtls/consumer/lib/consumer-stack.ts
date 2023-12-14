@@ -15,7 +15,7 @@ import {
 import { CfnParameter } from "aws-cdk-lib";
 
 
-export class ConsumerVpcStack extends cdk.Stack {
+export class ConsumerStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 

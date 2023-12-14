@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
-import { ConsumerVpcStack } from "../lib/consumer-vpc-stack";
+import { ConsumerStack } from "../lib/consumer-stack";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 
 const app = new cdk.App();
-const vpc = new ConsumerVpcStack(app, "ConsumerVpcStack", {
+const vpc = new ConsumerStack(app, "ConsumerStack", {
   env: {
     //Required for ELBv2 access logging to work
     account: process.env.CDK_DEFAULT_ACCOUNT,

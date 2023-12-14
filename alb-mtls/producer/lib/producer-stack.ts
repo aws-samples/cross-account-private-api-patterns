@@ -5,7 +5,6 @@ import * as custom from "aws-cdk-lib/custom-resources";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
 import {
   AccessLogFormat,
-  BasePathMapping,
   CfnAccount,
   Deployment,
   DomainName,
@@ -179,9 +178,12 @@ export class ProducerStack extends cdk.Stack {
         handler: "lambdaHandler",
         entry: "./configurePrivateDNS/app.ts",
         role: configurePrivateDNSRole,
+        timeout: Duration.seconds(600), // domain verification process can take up to 10 minutes
         environment: {
           SERVICE_ID: cfnVPCEndpointService.getAtt("ServiceId").toString(),
           DNS_NAME: subdomain.valueAsString + "." + domain.valueAsString,
+          ROOT_DNS: domain.valueAsString,
+          HOSTED_ZONE_ID: hostedZoneId.valueAsString,
         },
       }
     );
@@ -213,8 +215,32 @@ export class ProducerStack extends cdk.Stack {
       serviceToken: configurePrivateDNSProvider.serviceToken,
     });
 
+    const vpcEndpointServiceName = new custom.AwsCustomResource(
+      this,
+      "vpcEndpointServiceName",
+      {
+        onCreate: {
+          service: "EC2",
+          action: "describeVpcEndpointServiceConfigurations",
+          parameters: {
+            ServiceIds: [cfnVPCEndpointService.getAtt("ServiceId").toString()],
+          },
+          physicalResourceId: custom.PhysicalResourceId.fromResponse(
+            "ServiceConfigurations.0.ServiceName"
+          ),
+          outputPaths: ["ServiceConfigurations.0.ServiceName"],
+        },
+        policy: custom.AwsCustomResourcePolicy.fromSdkCalls({
+          resources: custom.AwsCustomResourcePolicy.ANY_RESOURCE,
+        }),
+      }
+    );
+    const serviceName = vpcEndpointServiceName.getResponseField(
+      "ServiceConfigurations.0.ServiceName"
+    );
+
     const outputEndpointService = new cdk.CfnOutput(this, "ServiceName", {
-      value: dnsService.getAtt("ServiceName").toString(),
+      value: serviceName,
       exportName: "ServiceName",
     });
 
