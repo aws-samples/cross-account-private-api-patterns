@@ -123,6 +123,10 @@ This example uses mTLS to authenticate communication between a producer and subs
 cd alb-mtls
 ```
 
+### Prerequisites 
+
+To use a custom domain name for private DNS, you will need an existing [Route53 Hosted Zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html) and a registered domain. 
+
 This example uses an AWS Private Certificate Authority, but you could follow the same process for any external/3rd party certificate authority. To create a CA to use for mTLS, follow the following steps (can be in any AWS account):
 
 1. Create ACM Private CA, specifying the CN (Common Name) as the domain (e.g. mtls.mydomain.com)
@@ -186,7 +190,7 @@ cd ../consumer && npm i && cdk bootstrap
 cdk deploy --parameters endpointService=com.amazonaws.vpce.region.vpce-svc-123456abcde
 ```
 
-Once this stack is deployed, the request to connection with the VPC endpoint must be accepted in the producer AWS account. This is an optional security control to manually verify consumers. 
+Once this stack is deployed, the request to connect with the VPC endpoint is automatically accepted by the producer AWS account. As an optional security control in production, you may want to manually verify consumers. 
 
 Then the API can be tested from the EC2 instance in the consumer account. Connect to the instance using Systems Manager Session Manager. You can retrieve the auth token from AWS Secrets Manager in the producer account. The secret ARN is also output from the producer stack for convenience:
 

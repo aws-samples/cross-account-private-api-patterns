@@ -147,7 +147,7 @@ export class ProducerStack extends cdk.Stack {
     nlb.logAccessLogs(nlbAccessLogs, "consumerAccessLogs");
 
     const cfnVPCEndpointService = new CfnVPCEndpointService(this, 'VPCEndpointService', {
-      acceptanceRequired: true,
+      acceptanceRequired: false, // In a production environment, you may want to require manual acceptance
       networkLoadBalancerArns: [nlb.loadBalancerArn]
     });
 

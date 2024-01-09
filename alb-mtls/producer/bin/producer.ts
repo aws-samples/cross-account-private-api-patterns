@@ -5,7 +5,7 @@ import { ProducerStack } from "../lib/producer-stack";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 
 const app = new cdk.App();
-const api = new ProducerStack(app, "ProducerStack", {
+const api = new ProducerStack(app, "mTLSProducerStack", {
     env: {
     //Required for ELBv2 access logging to work
     account: process.env.CDK_DEFAULT_ACCOUNT,

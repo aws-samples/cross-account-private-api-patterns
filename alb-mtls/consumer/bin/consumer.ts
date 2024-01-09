@@ -5,7 +5,7 @@ import { ConsumerStack } from "../lib/consumer-stack";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 
 const app = new cdk.App();
-const vpc = new ConsumerStack(app, "ConsumerStack", {
+const vpc = new ConsumerStack(app, "mtlsConsumerStack", {
   env: {
     //Required for ELBv2 access logging to work
     account: process.env.CDK_DEFAULT_ACCOUNT,
