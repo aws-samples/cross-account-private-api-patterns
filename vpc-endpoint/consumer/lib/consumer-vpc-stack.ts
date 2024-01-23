@@ -92,7 +92,7 @@ export class ConsumerVpcStack extends cdk.Stack {
       enforceSSL: true,
       encryption: BucketEncryption.S3_MANAGED,
       serverAccessLogsPrefix: "logs",
-      objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
+      objectOwnership: ObjectOwnership.OBJECT_WRITER,
     });
 
     const nlb = new NetworkLoadBalancer(this, "ConsumerNLB", {

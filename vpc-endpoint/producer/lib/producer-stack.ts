@@ -63,7 +63,7 @@ export class ProducerStack extends cdk.Stack {
     });
 
     const apiHandler = new NodejsFunction(this, "ProducerApiFunction", {
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_18_X,
       handler: "lambdaHandler",
       entry: "./api/app.ts",
     });
@@ -90,7 +90,7 @@ export class ProducerStack extends cdk.Stack {
     );
 
     const authorizerFn = new NodejsFunction(this, "AuthorizerFunction", {
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_18_X,
       handler: "lambdaHandler",
       entry: "./authorizer/app.ts",
       environment: {
