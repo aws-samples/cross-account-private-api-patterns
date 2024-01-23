@@ -14,11 +14,11 @@ npm install -g aws-cdk
 
 There are 2 example implementations in this repository. The first uses a VPC endpoint to grant access to the consumer AWS account. The second uses mutual TLS (mTLS) and AWS PrivateLink to authorize access using a client certificate.
 
-1. **[VPC Endpoint](#vpce)**
+1. **[VPC Endpoint](https://github.com/aws-samples/cross-account-private-api-patterns/tree/main#pattern-1-cross-account-via-vpc-endpoint-electric_plug)**
 
-2. **[mTLS via AWS PrivateLink](#mtls)**
+2. **[mTLS via AWS PrivateLink](https://github.com/aws-samples/cross-account-private-api-patterns/tree/main#pattern-2-cross-account-using-mtls-closed_lock_with_key)**
 
-## Pattern 1. Cross account via VPC endpoint :electric_plug: {#vpce}
+## Pattern 1. Cross account via VPC endpoint :electric_plug: 
 
 ![Architecture Diagram](./pattern1-arch1.png)
 
@@ -113,7 +113,7 @@ If everything works correctly you should see the below response:
 ```
 
 
-## Pattern 2. Cross account using mTLS :closed_lock_with_key: {#mtls} 
+## Pattern 2. Cross account using mTLS :closed_lock_with_key: 
 
 ![Architecture Diagram](./pattern2-arch1.png)
 
