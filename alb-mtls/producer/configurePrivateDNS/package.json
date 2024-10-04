@@ -7,7 +7,7 @@
     "author": "SAM CLI",
     "license": "MIT",
     "dependencies": {
-        "@aws-sdk/client-ec2": "^3.369.0",
+        "@aws-sdk/client-ec2": "^3.664.0",
         "@aws-sdk/client-route-53": "^3.369.0",
         "aws-sdk": "^2.1354.0"
     },
