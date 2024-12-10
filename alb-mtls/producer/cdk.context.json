@@ -1,7 +1,7 @@
 {
-  "availability-zones:account=329382086462:region=eu-west-2": [
-    "eu-west-2a",
-    "eu-west-2b",
-    "eu-west-2c"
+  "availability-zones:account=329382086462:region=eu-west-1": [
+    "eu-west-1a",
+    "eu-west-1b",
+    "eu-west-1c"
   ]
 }

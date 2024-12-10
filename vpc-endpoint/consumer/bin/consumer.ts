@@ -37,6 +37,10 @@ NagSuppressions.addStackSuppressions(vpc, [
     reason:
       "AWS Managed Policies used in this solution are:  AWSLambdaBasicExecutionRole",
   },
+  {
+    id: "AwsSolutions-SMG4",
+    reason: "No rotation required for secret used in this solution"
+  }
 ]);
 NagSuppressions.addStackSuppressions(api, [
   {
@@ -57,4 +61,8 @@ NagSuppressions.addStackSuppressions(api, [
     id: "AwsSolutions-L1",
     reason: "Custom Resource is currently hardcoded to NodeJS 14",
   },
+  {
+    id: "AwsSolutions-SMG4",
+    reason: "No rotation required for secret used in this solution"
+  }
 ]);

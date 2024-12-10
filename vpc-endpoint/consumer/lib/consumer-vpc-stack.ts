@@ -144,7 +144,7 @@ export class ConsumerVpcStack extends cdk.Stack {
       this,
       "IpTargetRegisterFunction",
       {
-        runtime: Runtime.NODEJS_16_X,
+        runtime: Runtime.NODEJS_22_X,
         handler: "lambdaHandler",
         entry: "./targetRegister/app.ts",
         role: ipTargetRegisterRole,

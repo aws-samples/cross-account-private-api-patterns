@@ -180,7 +180,7 @@ export class ProducerStack extends cdk.Stack {
       this,
       "configurePrivateDNSFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         handler: "lambdaHandler",
         entry: "./configurePrivateDNS/app.ts",
         role: configurePrivateDNSRole,
@@ -387,7 +387,7 @@ export class ProducerStack extends cdk.Stack {
       this,
       "IpTargetRegisterFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         handler: "lambdaHandler",
         entry: "./targetRegister/app.ts",
         role: ipTargetRegisterRole,
@@ -449,7 +449,7 @@ export class ProducerStack extends cdk.Stack {
 
     // Producer API configuration
     const apiHandler = new NodejsFunction(this, "ProducerApiFunction", {
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_22_X,
       handler: "lambdaHandler",
       entry: "./api/app.ts",
     });
@@ -476,7 +476,7 @@ export class ProducerStack extends cdk.Stack {
     );
 
     const authorizerFn = new NodejsFunction(this, "AuthorizerFunction", {
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_22_X,
       handler: "lambdaHandler",
       entry: "./authorizer/app.ts",
       environment: {

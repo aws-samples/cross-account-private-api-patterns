@@ -79,7 +79,7 @@ export class ConsumerApiStack extends cdk.Stack {
       this,
       "ModifyPolicyRoleFunction",
       {
-        runtime: Runtime.NODEJS_16_X,
+        runtime: Runtime.NODEJS_22_X,
         handler: "lambdaHandler",
         entry: "./endpointPolicy/app.ts",
         role: modifyPolicyRole,
@@ -155,7 +155,7 @@ export class ConsumerApiStack extends cdk.Stack {
     );
 
     const authorizerFn = new NodejsFunction(this, "AuthorizerFunction", {
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_22_X,
       handler: "lambdaHandler",
       entry: "./authorizer/app.ts",
       environment: {
@@ -255,7 +255,7 @@ export class ConsumerApiStack extends cdk.Stack {
     );
 
     const lambdaConsumer = new NodejsFunction(this, "ConsumerFunction", {
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_22_X,
       handler: "lambdaHandler",
       entry: "./lambdaConsumer/app.ts",
       environment: {
