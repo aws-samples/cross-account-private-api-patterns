@@ -31,10 +31,14 @@ NagSuppressions.addStackSuppressions(api, [
   },
   {
     id: "AwsSolutions-L1",
-    reason: "Custom Resource is currently hardcoded to NodeJS 14",
+    reason: "Custom Resource is currently hardcoded to NodeJS 22",
   },
   {
     id: "AwsSolutions-APIG2",
     reason: "Request validation not currently enabled. "
+  },
+  {
+    id: "AwsSolutions-SMG4",
+    reason: "No rotation required for secret used in this solution"
   }
 ]);

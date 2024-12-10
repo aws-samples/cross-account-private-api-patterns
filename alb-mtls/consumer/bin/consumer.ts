@@ -17,7 +17,7 @@ cdk.Aspects.of(app).add(new AwsSolutionsChecks());
 NagSuppressions.addStackSuppressions(vpc, [
   {
     id: "AwsSolutions-L1",
-    reason: "Custom resource is currently hardcoded to NodeJS 14",
+    reason: "Custom resource is currently hardcoded to NodeJS 22",
   },
   {
     id: "AwsSolutions-IAM5",
@@ -34,4 +34,8 @@ NagSuppressions.addStackSuppressions(vpc, [
     reason:
       "Standalone instace just for testing",
   },
+  {
+    id: "AwsSolutions-SMG4",
+    reason: "No rotation required for secret used in this solution"
+  }
 ]);
