@@ -49,7 +49,6 @@ import {
   ApplicationListener,
   ListenerAction
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
-// import { AlbTarget } from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets'
 import { AlbListenerTarget } from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
 import {
   Bucket,
@@ -284,11 +283,6 @@ export class ProducerStack extends cdk.Stack {
     alb.logAccessLogs(albAccessLogs, "albAccessLogs")
     alb.connections.allowFrom(Peer.ipv4(vpc.vpcCidrBlock), Port.tcp(443))
 
-    // nlbListener.addTargets('ALBTargets', {
-    //   targets: [new AlbTarget(alb, 443)],
-    //   port: 443,
-    // });
-
     const tg = new ApplicationTargetGroup(this, "ApiTargetGroup", {
       targetType: TargetType.IP,
       port: 443,
@@ -347,35 +341,14 @@ export class ProducerStack extends cdk.Stack {
       validation: CertificateValidation.fromDns(hostedZone),
     });
 
-    // const albListener = new CfnListener(this, 'ALBListener', {
-    //   port: 443,
-    //   protocol: "HTTPS",
-      
-    //   certificates: [{certificateArn: cert.certificateArn}],
-    //   defaultActions: [{
-    //     type: "forward",
-    //     targetGroupArn: tg.targetGroupArn,
-    //     forwardConfig: {
-    //       targetGroups: [{
-    //         targetGroupArn: tg.targetGroupArn,
-    //         weight: 100
-    //       }]
-    //     }
-    //   }],
-    //   loadBalancerArn: alb.loadBalancerArn,
-    //   mutualAuthentication: {
-    //     mode: "verify",
-    //     trustStoreArn: ts.getAtt("TrustStoreArn").toString()
-    //   }
-    // })
 
 
-    // Create an ApplicationListener (L2 construct) instead of CfnListener
+    // Create an ApplicationListener (L2 construct) 
     const albListener = new ApplicationListener(this, 'ALBListener', {
       loadBalancer: alb,
       port: 443,
       certificates: [{certificateArn: cert.certificateArn}],
-      defaultAction: ListenerAction.forward([tg])  // Simplified forward action
+      defaultAction: ListenerAction.forward([tg])  
     });
 
     // Add mutual authentication using the underlying L1 construct
